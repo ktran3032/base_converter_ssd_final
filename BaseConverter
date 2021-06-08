@@ -1,0 +1,406 @@
+#include <bits/types/FILE.h>
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
+#include <stdlib.h>
+
+/* let's us know the length of the user's value */
+static int len;
+const char* DecToHex(const char* source)
+{
+    static char hex[15];
+    int decimal, quotient, remainder;
+    int j = 0;
+    decimal = atoi(source);
+    quotient = decimal;
+    while (quotient != 0){
+        remainder = quotient % 16;
+        if (remainder < 10){
+            hex[j++] = 48 + remainder;
+        }
+        else{
+            hex[j++] = 55 + remainder;
+        }
+        quotient = quotient / 16;
+    }
+    return hex;
+}
+/* converts 'source' from a decimal value to an octal value and returns the octal value */
+int* DecToOct(const char* source)
+{
+    int length = 0;
+    for(int temp = atoi(source);temp > 0; length++)
+    {
+        temp = temp/8;
+    }
+    int octal = atoi(source);
+    static int* remainder;
+    remainder = malloc(length * sizeof(int));
+    int i = length-1;
+    while(octal > 0)
+    {
+        remainder[i--] = octal%8;
+        octal = octal/8;
+    }
+    len = length;
+    return remainder;
+}
+/* converts 'source' from a hexadecimal value to a decimal value and returns the decimal value */
+int HexToDec(const char* source)
+{
+    char hex[15];
+    int decimal = 0;
+    int temp, val, len;
+    strcpy(hex, source);
+    /* find the length of total number of hex digit */
+    len = strlen(hex);
+    len--;
+    /* iterate over each hex digit */
+    for(int i=0; hex[i]!='\0'; i++)
+    {
+        temp = 1;
+        /* find the decimal representation of hex[i] */
+        if(hex[i]>='0' && hex[i]<='9')
+        {
+            val = hex[i] - 48;
+        }
+        else if(hex[i]>='a' && hex[i]<='f')
+        {
+            val = hex[i] - 97 + 10;
+        }
+        else if(hex[i]>='A' && hex[i]<='F')
+        {
+            val = hex[i] - 65 + 10;
+        }
+        /* temp is just so we dont have to use pow() and have to run gcc with -lm
+        if we did we could change 'decimal += val * temp;' to 'decimal += val * pow(16, len);' */
+        for(int x = 0; x < len; x++)
+        {
+            temp *= 16;
+        }
+
+        decimal += val * temp;
+        len--;
+    }
+    return decimal;
+}
+/* converts 'source' from a hexadecimal value to a decimal value and returns an octal value
+after running the converted decimal value through the  DecToOct method */
+int* HexToOct(const char* source)
+{
+    char hex[15];
+    int decimal = 0;
+    int temp, val, len;
+    strcpy(hex, source);
+    /* find the length of total number of hex digit */
+    len = strlen(hex);
+    len--;
+    /*
+     * iterate over each hex digit
+     */
+    for(int i=0; hex[i]!='\0'; i++)
+    {
+        temp = 1;
+        /* find the decimal representation of hex[i] */
+        if(hex[i]>='0' && hex[i]<='9')
+        {
+            val = hex[i] - 48;
+        }
+        else if(hex[i]>='a' && hex[i]<='f')
+        {
+            val = hex[i] - 97 + 10;
+        }
+        else if(hex[i]>='A' && hex[i]<='F')
+        {
+            val = hex[i] - 65 + 10;
+        }
+        /* temp is just so we dont have to use pow() and have to run gcc with -lm
+        if we did we could change 'decimal += val * temp;' to 'decimal += val * pow(16, len);' */
+        for(int x = 0; x < len; x++)
+        {
+            temp *= 16;
+        }
+
+        decimal += val * temp;
+        len--;
+    }
+    /* decimal should now contain the correct answer
+    we would now run decimal into the DecToOct method */
+    char t[sizeof(decimal)];
+    sprintf(t,"%d",decimal);
+    return DecToOct(t);
+}
+/* converts 'source' from an octal value to a decimal value and returns the decimal value */
+int OctToDec(const char* source)
+{
+    int decimal = 0, tracker = 0, temp;
+    int octal = atoi(source);
+    while(octal != 0)
+    {
+        temp = 1;
+        /* temp is just so we dont have to use pow() and have to run gcc with -lm
+        if we did we could change 'decimal = decimal + (octal %10) * temp;' to 'decimal =  decimal +(octal % 10)* pow(8, tracker);' */
+        for(int x = 0; x < tracker; x++)
+        {
+            temp *= 8;
+        }
+        decimal = decimal + (octal %10) * temp;
+        tracker++;
+        octal = octal / 10;
+    }
+    return decimal;
+
+}
+/* converts 'source' from an octal value to a decimal value and returns a hexadecimal value
+after running the converted decimal value through the  DecToHex method */
+const char* OctToHex(const char* source)
+{
+    int decimal = 0, tracker = 0, temp;
+    int octal = atoi(source);
+    while(octal != 0)
+    {
+        temp = 1;
+        /* temp is just so we dont have to use pow() and have to run gcc with -lm
+        if we did we could change 'decimal = decimal + (octal %10) * temp;' to 'decimal =  decimal +(octal % 10)* pow(8, tracker);' */
+        for(int x = 0; x < tracker; x++)
+        {
+            temp *= 8;
+        }
+        tracker++;
+        decimal = decimal + (octal %10) * temp;
+        octal = octal / 10;
+    }
+    /* decimal should now contain the correct answer
+    we would now run decimal into the dec to hex method */
+    char t[sizeof(decimal)];
+    sprintf(t,"%d",decimal);    
+    return DecToHex(t);
+}
+
+int main(int argc, char *argv[])
+{
+    char text[1000];
+    char temp[1000];
+    char sBase[8];
+    char cBase[8];
+    int negative = 0;
+    /* conditional statement to check how the user wants to use the program, this specifically
+    runs when the user only runs the program with './a.out' and none of the command line parameters */
+    if(argc == 1)
+    {
+        printf("Valid Bases: 'Decimal' 'Hex' 'Octal'");
+        printf("\nPlease enter initial base: ");
+        scanf("%8s",sBase);
+        while ((getchar()) != '\n');
+        printf("\nValid Bases: 'Decimal' 'Hex' 'Octal'");
+        printf("\nPlease enter desired base: ");
+        scanf("%8s",cBase);
+        while ((getchar()) != '\n');
+        printf("\nPlease enter value(1000 Char Max): ");
+        scanf("%1000s",temp);
+        while ((getchar()) != '\n');
+    }
+	
+    else if(argc > 5 || argc == 3 || argc == 2)
+    {
+        printf("Invalid command, to use this command:\nThe format is: '-f' 'source' 'startingBase' 'convertedBase' when reading from a file\nor\nThe format is: 'source' 'startingBase' 'convertedBase', when reading from the command line\n");
+        return 0;
+    }
+    /* runs when the user indicates that they are trying to read from a file by typing '-f' */
+    else if(strcmp(argv[1], "-f") == 0)
+    {
+        FILE * filePointer;
+        filePointer = fopen(argv[2], "r");
+        if(filePointer == NULL)
+        {
+            perror("Invalid File:");
+            return 0;
+        }
+
+        while (fgets(temp, 1000, filePointer)) 
+        {}
+        
+        strcpy(sBase, argv[3]);
+        strcpy(cBase, argv[4]);
+    }
+    /* defaults to this when the command 'source' 'startingBase' 'convertedBase' is entered*/
+    else
+    {
+        if(argc > 4)
+        {
+            printf("Too many paramaters!\nThe format is: '-f' 'source' 'startingBase' 'convertedBase' when reading from a file\nor\nThe format is: 'source' 'startingBase' 'convertedBase', when reading from the command line\n");
+            return -1;
+        }
+        strcpy(temp,argv[1]);
+        strcpy(sBase, argv[2]);
+        strcpy(cBase, argv[3]);
+    }
+    /* checks to see if the value entered is negative or not, if it is, a negative flag is
+    triggered and the negative is removed */
+    if(temp[0] == '-'){
+        negative = 1;
+        for(int i = 0; i < (sizeof(temp)-1); i++){
+            text[i] = temp[i+1];
+        }
+    }
+    else{
+        for(int i = 0; i < (sizeof(temp)-1); i++){
+            text[i] = temp[i];
+        }
+    }
+	/* checks to see if the starting base is decimal */
+    if(sBase[0] == 'd' || sBase[0] == 'D')
+    {
+        /* checks to see if the value entered had any characters that aren't valid to decimal */
+        if (text[strspn(text, "0123456789")] != 0)
+        {
+            printf("Invalid Decimal Value!\n");
+            return 0;
+        }
+        /* checks to see if the value entered is larger than max int */
+        if(atol(text) > 2147483647)
+        {
+            printf("Number cannot exceed 2147483647\n");
+            return 0;
+        }
+        /* if the value passes all the tests, it checks to see the converted base*/
+        if(cBase[0] == 'o' || cBase[0] == 'O')
+        {
+            printf("Octal Value: ");
+            int* arr = DecToOct(text);
+            if(negative == 1)
+            {
+                printf("-");
+            }
+            for(int i =0;i< len;i++)
+            {
+                printf("%d",arr[i]);
+            }
+            printf("\n");
+        }
+        else if(cBase[0] == 'h' || cBase[0] == 'H')
+        {
+            printf("Hex Value: ");
+            const char *arr = DecToHex(text);
+            if(negative == 1)
+            {
+                printf("-");
+            }
+            for(int i = sizeof(arr)-1; i >=0;i--)
+            {
+                printf("%c",arr[i]);
+            }
+            printf("\n");
+        }
+        else
+        {
+            printf("Incorrect Base Name: Please choose Octal, Hex, Decimal\n");
+        }
+    }
+    /* checks to see if the starting base is octal */
+    if(sBase[0] == 'o' || sBase[0] == 'O')
+    {
+        /* checks to see if the value entered had any characters that arent valid to octal */
+        if (text[strspn(text, "01234567")] != 0)
+        {
+            printf("Invalid Octal Value!\n");
+            return 0;
+        }
+        /* checks to see if the value entered is larger than max int */
+        int l = 0;
+        while(text[l] != '\0')l++;
+        if(l>11)
+        {
+            printf("Oct Value too large! Max:17777777777\n");
+            return 0;
+        }
+        /* checks to see if the length is the max int value*/
+        if(l==11 && text[0]>'1')
+        {
+            printf("Oct Value too large! Max:17777777777\n");
+            return 0;
+        }
+        /* Checks the converted base. Also prints a negative sign before printing the converted number if the number is negative */
+        if(cBase[0] == 'd' || cBase[0] == 'D')
+        {
+            if(negative == 1)
+            {
+                printf("Decimal Value: -%d\n", OctToDec(text));
+            }
+            else
+            {
+                printf("Decimal Value: %d\n", OctToDec(text));
+            }
+        }
+        else if(cBase[0] == 'h' || cBase[0] == 'H')
+        {
+            printf("Hex value: ");
+            const char *arr = OctToHex(text);
+            if(negative == 1)
+            {
+                printf("-");
+            }
+            for(int i = sizeof(arr)-1; i >=0;i--)
+            {
+                printf("%c",arr[i]);
+            }
+            printf("\n");
+        }
+        else
+        {
+            printf("Incorrect Base Name: Please choose Octal, Hex, Decimal\n");
+        }
+    }
+    /* checks to see if the starting base is hexadecimal */
+    if(sBase[0] == 'h' || sBase[0] == 'H')
+    {
+        /* checks to see if the value entered had any characters that arent valid to hexadecimal */
+        if (text[strspn(text, "0123456789abcdefABCDEF")] != 0)
+        {
+            printf("Invalid Hex Value!");
+            return 0;
+        }
+        int l = 0;
+        while(text[l] != '\0')l++;
+        /* checks to see if the value entered is larger than max int */
+        if(l>8)
+        {
+            printf("Hex Value too large! Max:7FFFFFFF\n");
+            return 0;
+        }
+        if(l==8 && text[0]>'7')
+        {
+            printf("Hex Value too large! Max:7FFFFFFF\n");
+            return 0;
+        }
+        /* Checks to see the converted base, will also print a - for negative numbers */
+        if(cBase[0] == 'o' || cBase[0] == 'O')
+        {
+            printf("Octal Value: ");            
+            int* arr = HexToOct(text);
+            if(negative == 1)
+            {
+                printf("-");
+            }
+            for(int i =0;i< len;i++)
+            {
+                printf("%d",arr[i]);
+            }
+            printf("\n");
+        }
+        else if(cBase[0] == 'd' || cBase[0] == 'D')
+        {
+            if(negative == 1){
+                printf("Decimal Value: -%d\n", HexToDec(text));
+            }
+            else
+            {
+                printf("Decimal Value: %d\n", HexToDec(text));
+            }
+        }
+        else
+        {
+            printf("Incorrect Base Name: Please choose Octal, Hex, Decimal\n");
+        }
+    }
+}
